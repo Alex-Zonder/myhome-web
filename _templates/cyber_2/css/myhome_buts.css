@@ -1,0 +1,98 @@
+:root {
+	/*--but_color_0: #990000;
+	--but_color_1: teal;*/
+	--but_color_0: #cc0044;
+	--but_color_1: #009933;
+}
+
+.IO_Holder {
+	width:50%;float:left;
+}
+.IO_Content_Holder {
+	width:95%;
+	height:30px;
+
+	margin:auto;
+	margin-top: 3px;
+	margin-bottom: 3px;
+
+	overflow: hidden;
+
+	background:var(--color_1);
+	text-align: left;
+
+	position: relative;
+}
+.IO_Holder_Name {
+	width: calc(100% - 65px);
+
+	padding: 5px 0 0 5px;
+
+	float:left;
+
+	/*background: teal;*/
+
+	position: absolute;
+}
+.IO_Holder_IO {
+	width: 55px;
+	height: 26px;
+	margin: 2px 5px 0 0;
+
+	/*margin-left: calc(100% - 70px);*/
+	border-radius: calc(24px / 2);
+	right:0;
+
+	background: var(--color_2);
+	position: absolute;
+
+	text-align: center;
+
+	cursor: pointer;
+}
+
+
+
+
+
+/* INPUTS */
+.IO_Disabled, .IO_Enabled {
+	width: 51px;
+	height: 22px;
+	margin: 2px;
+	border-radius: calc(20px / 2);
+	background: var(--but_color_0);
+}
+.IO_Enabled {
+	background: var(--but_color_1);
+}
+
+
+
+
+/* OUTPUTS */
+.IO_Input_Disabled, .IO_Input_Enabled {
+	width: 51px;
+	height: 22px;
+	margin: 2px;
+	border-radius: calc(20px / 2);
+	background: var(--but_color_0);
+}
+.IO_Input_Enabled {
+	background:  var(--but_color_1);
+}
+
+.IO_Input_Disabled::after, .IO_Input_Enabled::before {
+	width: 20px;
+	height: 20px;
+	margin: 1px;
+	margin-left: 3px;
+	border-radius: calc(20px / 2);
+	background: var(--color_2);
+	content: '';
+	position: absolute;
+	left:0;
+}
+.IO_Input_Enabled::before {
+	margin-left: 31px;
+}

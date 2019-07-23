@@ -1,0 +1,8 @@
+{
+	"system":{"pach_to_myhome":"path_to_myhome_path"},
+	"myhome":{"host":"","port":"1001","commands_timeout":0,"connection_timeout":2000,"waiting_timeout":600000},
+	"main":{"system_name":"Кибер.Дом","first_group":0,"view_console":false},
+	
+	"groups":[],
+	"devices":[]
+}
