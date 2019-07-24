@@ -1,5 +1,8 @@
+// Myhome Host //
 var myhome_port = myhome_setts['myhome']['port'] || "1001";
-var myhome_host = myhome_setts['myhome']['host'] || "http://"+window.location.hostname+":" + myhome_port + "/";
+var myhome_host = myhome_setts['myhome']['host'] || "http://"+window.location.hostname;
+myhome_host += ":" + myhome_port + "/";
+// Myhome Timeout //
 var myhome_commands_timeout = myhome_setts['myhome']['commands_timeout'] || 0;
 var myhome_connection_timeout = myhome_setts['myhome']['connection_timeout'] || 2000;
 var myhome_waiting_timeout = myhome_setts['myhome']['waiting_timeout'] || 600000;
