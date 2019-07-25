@@ -66,6 +66,7 @@ var Init_Myhome = function () {
 	setTimeout("ViewGroup(myhome_setts['main']['first_group'])", 1);
 	body_footer_opened = myhome_setts['main']['view_console'] || false;
 
+	EnableMyhomeWait();
 	if (commands.length) setTimeout("SendCommands();", 20);
 }
 
@@ -76,9 +77,6 @@ var Init_Myhome = function () {
 
 
 // ____________________________   M Y H O M E   C O M M A N D S   ____________________________ //
-//function CommandsSent(){
-	EnableMyhomeWait();
-//}
 function MakeCommands (returned) {
 	var commands = returned.split(";");
 	for (var x=0; commands[x]; x++) MakeCommand(commands[x]);

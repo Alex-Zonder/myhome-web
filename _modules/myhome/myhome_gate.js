@@ -4,7 +4,7 @@ var myhome_host = myhome_setts['myhome']['host'] || "http://"+window.location.ho
 myhome_host += ":" + myhome_port + "/";
 // Myhome Timeout //
 var myhome_commands_timeout = myhome_setts['myhome']['commands_timeout'] || 0;
-var myhome_connection_timeout = myhome_setts['myhome']['connection_timeout'] || 2000;
+var myhome_connection_timeout = myhome_setts['myhome']['connection_timeout'] || 1000;
 var myhome_waiting_timeout = myhome_setts['myhome']['waiting_timeout'] || 600000;
 
 
@@ -38,37 +38,46 @@ function MyhomeSendCommand (command,return_func,check_len,tryes) {
 			var answer = myhome_xml.responseText;
 			var error = false;
 
-			// Timeout //
-			if (myhome_xml_timer!=0) {
-				clearTimeout(myhome_xml_timer);
+			// Timeout Error //
+			if (!myhome_xml_timer) {
+				error = true;
+				answer = "TimeOut Try:" + (parseInt(tryes)+1);
 			}
 			else {
-				answer = "TimeOut";
-				error = true;
+				clearTimeout(myhome_xml_timer);
 			}
 
-			// Network Error //
+			// Network Error (must be after Timeout) //
 			if (answer == "") {
-				status = -1;
-				answer = "NetError: " + myhome_host;
 				error = true;
+				answer = "NetError: " + myhome_host + " Try:" + (parseInt(tryes)+1);
 			}
 
-			//   Console   //
-			if (typeof ConsoleWrite !== 'undefined') ConsoleWrite(command + " -> " + answer);
+			// Device Error //
+			if (!error && !MyhomeCheckAnswer (command,answer, check_len)) {
+				error = true;
+				answer = "DevError: " + answer + " Try:" + (parseInt(tryes)+1);
+			}
 
 			// Check Answer OK //
-			if (MyhomeCheckAnswer (command,answer, check_len) || error || tryes > 1) {
+			if (!error) {
 				//   Return   //
-				var myhome_answer = {'command':command,'status':status,'answer':answer};
+				var myhome_answer = {'command':command,'answer':answer};
 				if (typeof return_func !== 'undefined') return_func(command,myhome_answer);
+				// Если некуда возвращать //
 				else alert(FromJson(myhome_answer));
 
 				// Enable Wait //
-				if (myhome_wait_was_enabled && commands.length == 0 && status > -1) EnableMyhomeWait();
+				if (myhome_wait_was_enabled && commands.length == 0) EnableMyhomeWait();
 			}
 			// Check Answer ERROR //
-			else MyhomeSendCommand (command,return_func,check_len,(tryes+1));
+			else if (tryes < 3) {
+				MyhomeSendCommand (command,return_func,check_len,(tryes+1));
+			}
+			else return_func(command,myhome_answer);
+
+			//   Console   //
+			if (typeof ConsoleWrite !== 'undefined') ConsoleWrite(command + " -> " + answer);
 		}
 	};
 
