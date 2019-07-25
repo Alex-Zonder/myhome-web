@@ -68,6 +68,5 @@ function OnRightArrow() {if (document.activeElement.id == '') moved_myhome.Chang
 
 
 //   Init Myhome   //
-Init_Myhome();
+document.addEventListener("DOMContentLoaded", Init_Myhome);
 </script>
-
