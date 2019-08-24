@@ -10,6 +10,9 @@ if ($auth_enabled=="yes" || $auth_enabled=="1" || $auth_enabled==true) {
 else $auth_enabled=false;
 
 
+//			GET/POST (curl)   M O D U L E			//
+include($docRoot.'_modules/system/get_post.php');
+
 
 //								Start Class (System)								//
 class System {

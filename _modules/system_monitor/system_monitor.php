@@ -3,7 +3,7 @@ if (isset($GLOBALS["system_OS"])) $system_OS = $GLOBALS["system_OS"];
 else $system_OS=exec("uname");
 
 class SystemMonitor {
-	//			I N I T			//
+	//			I N I T		J S			//
 	function InitJava () {
 		global $htmlRoot;
 		?>
@@ -12,27 +12,63 @@ class SystemMonitor {
 	}
 
 
-	function Ips () {
+	//			Os Version			//
+	function OsVersion () {
 		global $system_OS;
-		//   Freebsd  / Darwin  //
-		if ($GLOBALS['system_OS']=="FreeBSD" || $GLOBALS['system_OS']=="Darwin")
-			$ipScan=shell_exec('ifconfig | grep "inet " | grep -v "127.0."');
-		//   Linux   //
-		else
-			$ipScan=shell_exec('ip addr show | grep "inet " | grep -v "127.0."');
-		return $ipScan;
+
+		// FreeBSD //
+		if ($system_OS == "FreeBSD") {
+			$command = "uname -a | awk '{ print $3 }'";
+			$os_ver_shell = explode('-RELEASE', exec($command));
+			$os_name = $system_OS;
+			$os_ver = $os_ver_shell[0];
+			$os_release = $os_ver_shell[1];
+			$os_full = $os_name . ' ' . $os_ver . $os_release;
+		}
+		// Linux //
+		else if ($system_OS == "Linux") {
+			$command = 'lsb_release -a 2>/dev/null | grep "ID\|Release" | awk \'{ print $NF }\'';
+			$os_ver_shell = explode("\n", shell_exec($command));
+			$os_name = $os_ver_shell[0];
+			$os_ver = $os_ver_shell[1];
+			$os_full = $os_name . " " . $os_ver;
+		}
+		// Darwin //
+		else {
+			$os_full = $system_OS;
+		}
+
+		// Return //
+		return ['os_name' => $os_name, 'os_ver' => $os_ver, 'os_full' => $os_full];
 	}
 
-	function Uptime () {
+
+	//			System Info			//
+	function SysInfo () {
 		global $system_OS;
+		$sys_name = exec("uname -a | awk '{ print $2 }'");
+
 		$uptime=shell_exec("uptime | awk -F 'up' '{ print $2 }' | awk -F 'user' '{ print $1 }' | awk -F ',' '{ for (i = 1; i < NF; i++) print ".'$i'." }'");
 		$uptime=str_replace("\n", "", $uptime);
+
 		$users=exec("uptime | awk -F 'user' '{ print $1 }' | awk -F ".'","'." '{ print ".'$NF'." }'");
 		$averages=exec("uptime | awk -F 'averages:' '{ print $2 }'");
+		$date = exec('date');
 
-		return ['system_OS'=>$system_OS,'uptime'=>$uptime,'users'=>$users,'averages'=>$averages];
+		// Return //
+		return [
+			'system_OS' => $this->OsVersion()['os_full'],
+			'uptime' => $uptime,
+			'system_name' => $sys_name,
+			'users' => $users,
+			'averages' => $averages,
+			'date' => $date
+		];
 	}
 
+
+
+	//			R A M			//
 	function Ram () {
 		global $system_OS;
 		//   Linux   //
@@ -54,16 +90,21 @@ class SystemMonitor {
 			$exec_command="sysctl hw | egrep 'hw.(memsize)' | awk '{print $2}'";
 			$memsize=exec($exec_command);
 
+		// Return //
 			return ['memsize'=>$memsize/1024/1024];
 		}
 	}
 
-	/*function Hdd () {
+
+
+	//			H D D			//
+	function Hdds () {
 		global $system_OS, $system_ifaces;
 		$grep='/dev/ro\|/dev/sd\|/dev/ad\|/dev/disk';
 		$du=shell_exec('df -m | grep \''.$grep.'\'');
 		$disks=explode("\n", $du);
 
+		$disk = array();
 		for ($x=0; $x<count($disks)-1; $x++) {
 			$data=preg_split('/ /', $disks[$x], -1, PREG_SPLIT_NO_EMPTY);
 			$vol=$data[1];
@@ -78,9 +119,51 @@ class SystemMonitor {
 			if ($free>=1000000) $free=round(($free/1000000),2).' Tb';
 			else if ($free>=1000) $free=round(($free/1000),2).' Gb';
 			else $free=$free.' Mb';
+			
+			$disk[$x] = [
+				'name' => $data[0],
+				'size' => $vol,
+				'used' => $zanyato,
+				'used_per' => $data[4],
+				'free' => $free
+			];
 		}
-	}*/
 
+		// Return //
+		return $disk;
+	}
+
+
+
+	//			C P U   T Y P E			//
+	function CpuType () {
+		global $system_OS;
+
+		//   Freebsd  //
+		if ($system_OS == "FreeBSD")
+			$cpu=shell_exec('/sbin/sysctl hw.model hw.ncpu 2>&1');
+
+		//   Linux   //
+		else if ($system_OS == "Linux"){
+			$os_name = $this->OsVersion()['os_name'];
+			// Raspbian //
+			if ($os_name == "Raspbian") {
+				$cpu=exec('cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq') . 'Hz';
+			}
+			// Ubuntu //
+			else if ($os_name == "Ubuntu") {
+				$cpu=shell_exec('lshw | grep -i cpu | grep Hz 2>&1');
+			}
+		}
+
+		//   Darwin  //
+		else if ($system_OS == "Darwin")
+			$cpu=shell_exec('sysctl hw.cpufrequency hw.ncpu 2>&1');
+
+		// Return //
+		return $cpu;
+	}
+	//			C P U	L O A D			//
 	function CpuLoad () {
 		//   FreeBSD   //
 		if ($GLOBALS['system_OS']=="FreeBSD") {
@@ -103,19 +186,61 @@ class SystemMonitor {
 			$load=strval(doubleval($loads[1])+doubleval($loads[3])+doubleval($loads[5])+doubleval($loads[9]));
 			$free=doubleval($loads[7]);
 		}
+
+		// Return //
 		return ['load'=>$load,'free'=>$free];
 	}
 
+
+
+	//			I P S			//
+	function Ips () {
+		global $system_OS;
+		//   Freebsd  //
+		if ($system_OS == "FreeBSD")
+			$ipScan=shell_exec('/sbin/ifconfig | grep "inet " | grep -v "127.0."');
+		//   Darwin  //
+		else if ($system_OS == "Darwin")
+			$ipScan=shell_exec('ifconfig | grep "inet " | grep -v "127.0."');
+		//   Linux   //
+		else
+			$ipScan=shell_exec('ip addr show | grep "inet " | grep -v "127.0."');
+
+		// Sorting //
+		$ipScan = explode("\n", $ipScan);
+		$ips = [];
+		for($x=0; $x<count($ipScan); $x++) {
+			if ($ipScan[$x] != '') {
+				$ip = explode("inet ", $ipScan[$x])[1];
+				$ips[$x]['string'] = $ip;
+
+				$ip_arr = explode(" ", $ip);
+				$ips[$x]['ip'] = $ip_arr[0];
+			}
+		}
+		// Return //
+		return $ips;
+	}
+
+
+	//			N E T   L O A D			//
 	function NetLoad () {
 		global $system_OS, $system_ifaces;
 		//   FreeBSD   //
 		if ($GLOBALS['system_OS']=="FreeBSD") {
-			$comm="netstat -I ".$system_ifaces[0]." -w1 -q1 | tail -n1 | awk '{ print $4\" \"$7 }'";
-			$res=shell_exec($comm);
+			$comm="/usr/bin/netstat -I ".$system_ifaces[0]." -w1 -q1 | tail -n1 | awk '{ print $4\" \"$7 }'";
+			$res=exec($comm);
 			$nLoad=explode(" ",$res);
 
-			$bites_in=number_format((intval($nLoad[0])/1024/1024)*8,2,',','');
-			$biyes_out=number_format((intval($nLoad[1])/1024/1024)*8,2,',','');
+			if (isset($nLoad[1])) {
+				$bites_in=number_format((intval($nLoad[0])/1024/1024)*8,2,',','');
+				$biyes_out=number_format((intval($nLoad[1])/1024/1024)*8,2,',','');
+			}
+			else {
+				sleep(1);
+				$bites_in = -1;
+				$biyes_out = -1;
+			}
 		}
 		//   Darwin   //
 		else if ($GLOBALS['system_OS']=="Darwin") {
@@ -145,49 +270,10 @@ class SystemMonitor {
 			$bites_in=number_format((intval($R2-$R1)/1024/1024)*8,2,',','');
 			$biyes_out=number_format((intval($T2-$T1)/1024/1024)*8,2,',','');
 		}
+
+		// Return //
 		return ['iface'=>$system_ifaces[0],'in'=>$bites_in,'out'=>$biyes_out];
 	}
-
-
-
-
-
-
-	//_______________________ Drawing _______________________//
-	function DrawSystemBlocks () {
-		?>
-		<div class="info_block">
-		<div class="info_block_name">OS & Up Time & Averages</div>
-		<div class="info_block_info">
-			<center><div id="sys_info">
-			</div></center>
-		</div></div>
-
-
-		<div class="info_block" style="width:calc(50% - 3px);float:left;">
-		<div class="info_block_name">Процессор</div>
-		<div class="info_block_info">
-			<center><div id="cpu">
-				Нагрузка: --.- %
-				<br>Свободно: --.- %
-			</div></center>
-		</div></div>
-
-		<div class="info_block" style="width:calc(50% - 3px);float:left;">
-		<div class="info_block_name">Сеть</div>
-		<div class="info_block_info">
-			<center><div id="network">
-				Вход: -,-- Мб
-				<br>Выход: -,-- Мб
-			</div></center>
-		</div></div>
-
-		<div style="clear:both;"></div>
-
-
-		<?php
-	}
-
 }
-$system_monitor=new SystemMonitor;
+$system_monitor = new SystemMonitor();
 ?>

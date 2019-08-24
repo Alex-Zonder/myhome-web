@@ -117,7 +117,11 @@ include($docRoot.$template."header.php");
 	<center>
 	<?php
 		$ipScan=$system_monitor->Ips();
-		echo nl2br($ipScan);
+		/*$data = '';
+		foreach ($ipScan as $ip) {
+			$data += $ip['ip'] + '<br>';
+		}*/
+		echo print_r($ipScan);
 	?>
 	</center>
 </div>
