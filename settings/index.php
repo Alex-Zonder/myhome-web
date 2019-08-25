@@ -24,21 +24,10 @@ include($docRoot.$template."header.php");
 <div class="info_block">
 	<div class="info_block_name">Мой дом</div>
 	<center>
-		<div class="butBig"><a href="myhome/main.php">Настройки программы</a></div>
+		<div class="butBig"><a href="myhome/main.php">Основные настройки</a></div>
 		<hr style="margin:-8 0 -8 0;"><div class="butBig"><a href="myhome/auto.php">Автоматизация</a></div>
 		<div class="butBig"><a href="myhome/devices.php">Настройка устройств</a></div>
 		<hr style="margin:-8 0 -8 0;"><div class="butBig"><a href="myhome/terminal.php">Терминал - Умный дом</a></div>
-	</center>
-</div>
-
-
-
-
-<div class="info_block">
-	<div class="info_block_name">Интернет</div>
-	<center>
-		<div class="butBig"><a href="internet/vpn.php">VPN - Мой.Киберлайт</a></div>
-		<div class="butBig"><a href="internet/mail.php">Нстройка почты</a></div>
 	</center>
 </div>
 
@@ -50,6 +39,17 @@ include($docRoot.$template."header.php");
 	<center>
 		<div class="butBig"><a href="network/scan_ip.php">Сканер сети</a></div>
 		<div class="butBig"><a href="network/scan_stream.php">Сканер потоков камер</a></div>
+	</center>
+</div>
+
+
+
+
+<div class="info_block">
+	<div class="info_block_name">Интернет</div>
+	<center>
+		<div class="butBig"><a href="internet/vpn.php">VPN - Мой.Киберлайт</a></div>
+		<div class="butBig"><a href="internet/mail.php">Нстройка почты</a></div>
 	</center>
 </div>
 
