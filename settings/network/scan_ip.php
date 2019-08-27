@@ -56,7 +56,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$post_action=$_POST['action'];
 	$post_data=$_POST['data'];
 
-	if ($post_action == 'scan_ips') {
+	// System Ips //
+	if ($post_action == 'system_ips') {
+		$system_ips = $system_monitor->Ips();
+		echo $system->ToJson($system_ips);
+	}
+	// Scan Ips //
+	else if ($post_action == 'scan_ips') {
 		$data = $system->FromJson($post_data);
 		// Scaning IP Range //
 		$ips_online = ScanIps ($data['net'], $data['range'], $data['time']);
@@ -67,14 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 			$ips[$x]['ip'] = explode(":", $ip_arr[3])[0];
 			$ips[$x]['time'] = explode("=", $ip_arr[6])[1];
 		}
-
-		// Scan ports //
-		//$ports = $data['ports'];
-		//$ports_opened=ScanPorts($ips, $ports);
-
 		// Return //
 		echo $system->ToJson(['ips'=>$ips,'ports'=>[]]);
 	}
+	// Scan Ports //
 	else if ($post_action == 'scan_ports') {
 		$data = $system->FromJson($post_data);
 		// Scan ports //
@@ -101,9 +103,10 @@ if ($_GET['net']!=''){
 }
 ?>
 <?php
+//     System Monitor     //
+$system_monitor->InitJava();
 //								H T M L								//
-$title.=" - Настройки";
-//$template='_templates/1/';
+$title .= " - Сканер сети";
 $system->InitJava();
 include($docRoot.$template."header.php");
 ?>
@@ -114,16 +117,7 @@ include($docRoot.$template."header.php");
 
 <div class="info_block">
 <div class="info_block_name">Доступные сети</div>
-	<center>
-	<?php
-		$ipScan=$system_monitor->Ips();
-		/*$data = '';
-		foreach ($ipScan as $ip) {
-			$data += $ip['ip'] + '<br>';
-		}*/
-		echo print_r($ipScan);
-	?>
-	</center>
+	<center><div id="system_ips"></div></center>
 </div>
 
 
@@ -172,6 +166,7 @@ include($docRoot.$template."footer.php");
 ?>
 
 <script>
+SendPostAsync('system_ips');
 function Scan () {
 	var net = document.getElementById('net').value;
 	var range = document.getElementById('range').value;
@@ -183,15 +178,19 @@ function Scan () {
 	if (ports!='') document.getElementById('scaning').innerHTML+=' <font color="green">:'+ports+'</font>';
 
 	var query = {'net':net,'range':range,'time':time,'ports':ports};
-	//alert(ToJson(query));
-	SendPost ('scan_ips',ToJson(query),true);
+	SendPostAsync ('scan_ips',ToJson(query));
 }
+var system_ips = [];
 var ips = [];
 function PostReturned (servAnswer,send_action,send_data) {
 	console.log(servAnswer);
 	var ip_data = FromJson(servAnswer);
 
-	if (send_action == 'scan_ips') {
+	if (send_action == 'system_ips') {
+		DrawSystemInfo(servAnswer, send_action);
+	}
+
+	else if (send_action == 'scan_ips') {
 		var ports = document.getElementById('ports').value;
 		ports_html = '';
 		if (ports != '') ports_html = 'Сканирование..';
@@ -202,7 +201,7 @@ function PostReturned (servAnswer,send_action,send_data) {
 		}
 
 		var query = {'ips':ip_data['ips'],'ports':ports};
-		if (ports != '' && ip_data['ips'].length > 0) SendPost ('scan_ports',ToJson(query),true);
+		if (ports != '' && ip_data['ips'].length > 0) SendPostAsync ('scan_ports',ToJson(query));
 	}
 
 	else if (send_action == 'scan_ports') {
@@ -228,7 +227,7 @@ function PostReturned (servAnswer,send_action,send_data) {
 		}
 	}
 
-	// Reaturn //
+	// Return //
 	var html = '<table><th width="40%">Адрес</th><th width="20%">Отклик</th><th>Порты</th>';
 	for (x=0; x<ips.length; x++) {
 		html += '<tr><td>';

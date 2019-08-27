@@ -28,7 +28,7 @@ function DrawSystemInfo (data, action) {
 
 	// System Disks //
 	if (action=='disks') {
-		data = '<table><tr>' + 
+		data = '<table><tr>' +
 			'<th>Диск</th>' +
 			'<th>Объем</th>' +
 			'<th>Занято</th>' +
@@ -49,12 +49,11 @@ function DrawSystemInfo (data, action) {
 
 	// System Ips //
 	if (action=='system_ips') {
-		data = '';
+		var data = '<table><tr><th width="50%">IP - адрес</th><th>Маска подсети</th>';
 		for (x=0; x<parsed.length; x++) {
-			if (parsed[x]['ip'] != '') {
-				data += parsed[x]['string'] + '<br>';
-			}
+			data += '<tr><td width="50%">' + parsed[x]['ip'] + '</td><td align="right">' + parsed[x]['netmask'] + '</td></tr>';
 		}
+		data += '</table>';
 	}
 
 

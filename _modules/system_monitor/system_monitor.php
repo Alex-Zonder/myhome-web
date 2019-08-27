@@ -119,7 +119,7 @@ class SystemMonitor {
 			if ($free>=1000000) $free=round(($free/1000000),2).' Tb';
 			else if ($free>=1000) $free=round(($free/1000),2).' Gb';
 			else $free=$free.' Mb';
-			
+
 			$disk[$x] = [
 				'name' => $data[0],
 				'size' => $vol,
@@ -193,7 +193,7 @@ class SystemMonitor {
 
 
 
-	//			I P S			//
+	//			S Y S T E M   I P S			//
 	function Ips () {
 		global $system_OS;
 		//   Freebsd  //
@@ -211,11 +211,15 @@ class SystemMonitor {
 		$ips = [];
 		for($x=0; $x<count($ipScan); $x++) {
 			if ($ipScan[$x] != '') {
-				$ip = explode("inet ", $ipScan[$x])[1];
-				$ips[$x]['string'] = $ip;
+				$ip_string = explode("inet ", $ipScan[$x])[1];
+				$ips[$x]['string'] = $ip_string;
 
-				$ip_arr = explode(" ", $ip);
+				$ip_arr = explode(" ", $ip_string);
 				$ips[$x]['ip'] = $ip_arr[0];
+
+				$netmask_arr = explode("netmask ", $ip_string);
+				$netmask_arr = explode(" ", $netmask_arr[1])[0];
+				$ips[$x]['netmask'] = $netmask_arr;
 			}
 		}
 		// Return //
