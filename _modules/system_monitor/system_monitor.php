@@ -52,7 +52,7 @@ class SystemMonitor {
 		$uptime=str_replace("\n", "", $uptime);
 
 		$users=exec("uptime | awk -F 'user' '{ print $1 }' | awk -F ".'","'." '{ print ".'$NF'." }'");
-		$averages=exec("uptime | awk -F 'averages:' '{ print $2 }'");
+		$averages=exec("uptime | awk -F 'average' '{ print $2 }' | awk '{ print $2\" \"$3\" \"$4 }'");
 		$date = exec('date');
 
 		// Return //
