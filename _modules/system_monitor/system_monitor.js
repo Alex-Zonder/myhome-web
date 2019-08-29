@@ -6,6 +6,7 @@ function DrawSystemInfo (data, action) {
 		data = '<table>';
 		data += '<tr><td width="50%">Имя</td><td align="right">' + parsed['system_name'] + '</td></tr>';
 		data += '<tr><td width="50%">Система</td><td align="right">' + parsed['system_OS'] + '</td></tr>';
+		data += '<tr><td width="50%">Версия php</td><td align="right">' + parsed['php_version'] + '</td></tr>';
 		data += '<tr><td width="50%">Время</td><td align="right">' + parsed['date'] + '</td></tr>';
 		data += '<tr><td width="50%">UpTime</td><td align="right">' + parsed['uptime'] + '</td></tr>';
 		data += '<tr><td width="50%">Пользователи</td><td align="right">' + parsed['users'] + '</td></tr>';

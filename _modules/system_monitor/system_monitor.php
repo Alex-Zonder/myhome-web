@@ -54,6 +54,7 @@ class SystemMonitor {
 		$users=exec("uptime | awk -F 'user' '{ print $1 }' | awk -F ".'","'." '{ print ".'$NF'." }'");
 		$averages=exec("uptime | awk -F 'average' '{ print $2 }' | awk '{ print $2\" \"$3\" \"$4 }'");
 		$date = exec('date');
+		$php_version = explode("-", PHP_VERSION)[0];
 
 		// Return //
 		return [
@@ -62,7 +63,8 @@ class SystemMonitor {
 			'system_name' => $sys_name,
 			'users' => $users,
 			'averages' => $averages,
-			'date' => $date
+			'date' => $date,
+			'php_version' => $php_version
 		];
 	}
 
