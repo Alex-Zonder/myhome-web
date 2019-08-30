@@ -73,28 +73,35 @@ class SystemMonitor {
 	//			R A M			//
 	function Ram () {
 		global $system_OS;
+		$ram = [];
+
 		//   Linux   //
 		if ($system_OS == "Linux") {
-			$total=exec("free -h | grep Mem | awk '{print $2}'");
-			$used=exec("free -h | grep Mem | awk '{print $3}'");
-			$free=exec("free -h | grep Mem | awk '{print $4}'");
-			return ['total'=>$total/1024/1024,'used'=>$used/1024/1024,'free'=>$free/1024/1024];
+			$ram_string = exec("free | grep Mem");
+			$ram_arr = preg_split('/\s+/', $ram_string);
+			$ram['total'] = $ram_arr[1]/1024/1024;
+			$ram['used'] = $ram_arr[2]/1024/1024;
+			$ram['free'] = $ram_arr[3]/1024/1024;
 		}
 		//   Freebsd   //
 		else if ($system_OS == "FreeBSD") {
-			$phys=exec("/sbin/sysctl hw | grep 'hw.phys' | awk '{print $2}'");
-			$user=exec("/sbin/sysctl hw | grep 'hw.user' | awk '{print $2}'");
-			$real=exec("/sbin/sysctl hw | grep 'hw.real' | awk '{print $2}'");
-			return ['phys'=>$phys/1024/1024,"user"=>$user/1024/1024,"real"=>$real/1024/1024];
+			$ram['total'] = exec("/sbin/sysctl hw | grep 'hw.phys' | awk '{print $2}'")/1024/1024;
+			$ram['used'] = exec("/sbin/sysctl hw | grep 'hw.user' | awk '{print $2}'")/1024/1024;
+			$ram['free'] = exec("/sbin/sysctl hw | grep 'hw.real' | awk '{print $2}'")/1024/1024;
 		}
 		//   Mac OS   //
 		else if ($system_OS == "Darwin") {
-			$exec_command="sysctl hw | egrep 'hw.(memsize)' | awk '{print $2}'";
-			$memsize=exec($exec_command);
-
-		// Return //
-			return ['memsize'=>$memsize/1024/1024];
+			$ram['total'] = exec("sysctl hw | egrep 'hw.(memsize)' | awk '{print $2}'")/1024/1024/1024;
 		}
+
+		//   Return   //
+		if (isset($ram['total']))
+			$ram['total'] = number_format(($ram['total']), 2, ',', '');
+		if (isset($ram['used']))
+			$ram['used'] = number_format(($ram['used']), 2, ',', '');
+		if (isset($ram['free']))
+			$ram['free'] = number_format(($ram['free']), 2, ',', '');
+		return $ram;
 	}
 
 
@@ -232,40 +239,9 @@ class SystemMonitor {
 	//			N E T   L O A D			//
 	function NetLoad () {
 		global $system_OS, $system_ifaces;
-		//   FreeBSD   //
-		if ($GLOBALS['system_OS']=="FreeBSD") {
-			$comm="/usr/bin/netstat -I ".$system_ifaces[0]." -w1 -q1 | tail -n1 | awk '{ print $4\" \"$7 }'";
-			$res=exec($comm);
-			$nLoad=explode(" ",$res);
 
-			if (isset($nLoad[1])) {
-				$bites_in=number_format((intval($nLoad[0])/1024/1024)*8,2,',','');
-				$biyes_out=number_format((intval($nLoad[1])/1024/1024)*8,2,',','');
-			}
-			else {
-				sleep(1);
-				$bites_in = -1;
-				$biyes_out = -1;
-			}
-		}
-		//   Darwin   //
-		else if ($GLOBALS['system_OS']=="Darwin") {
-			$comm="netstat -I ".$system_ifaces[0]." -b | tail -n1 | awk '{ print $7\" \"$10 }'";
-			$res=shell_exec($comm);
-			$R1=explode(" ", $res)[0];
-			$T1=explode(" ", $res)[1];
-			sleep(1);
-
-			$comm="netstat -I ".$system_ifaces[0]." -b | tail -n1 | awk '{ print $7\" \"$10 }'";
-			$res=shell_exec($comm);
-			$R2=explode(" ", $res)[0];
-			$T2=explode(" ", $res)[1];
-
-			$bites_in=number_format((intval($R2-$R1)/1024/1024)*8,2,',','');
-			$biyes_out=number_format((intval($T2-$T1)/1024/1024)*8,2,',','');
-		}
 		//   Linux   //
-		else {
+		if ($system_OS == "Linux") {
 			$R1=exec("cat /sys/class/net/".$system_ifaces[0]."/statistics/rx_bytes");
 			$T1=exec("cat /sys/class/net/".$system_ifaces[0]."/statistics/tx_bytes");
 
@@ -275,6 +251,44 @@ class SystemMonitor {
 
 			$bites_in=number_format((intval($R2-$R1)/1024/1024)*8,2,',','');
 			$biyes_out=number_format((intval($T2-$T1)/1024/1024)*8,2,',','');
+		}
+		//   FreeBSD   //
+		else if ($system_OS == "FreeBSD") {
+			$comm = "/usr/bin/netstat -I ".$system_ifaces[0]." -w1 -q1 | tail -n1 | awk '{ print $4\" \"$7 }'";
+			$res = exec($comm);
+			$nLoad = explode(" ",$res);
+
+			if (isset($nLoad[1])) {
+				$bites_in = number_format((intval($nLoad[0])/1024/1024)*8,2,',','');
+				$biyes_out = number_format((intval($nLoad[1])/1024/1024)*8,2,',','');
+			}
+			else {
+				sleep(1);
+				$bites_in = -1;
+				$biyes_out = -1;
+			}
+		}
+		//   Darwin   //
+		else if ($system_OS == "Darwin") {
+			$comm = "netstat -I ".$system_ifaces[0]." -b | tail -n1 | awk '{ print $7\" \"$10 }'";
+			$res = shell_exec($comm);
+			$R1 = explode(" ", $res)[0];
+			$T1 = explode(" ", $res)[1];
+			sleep(1);
+
+			$comm = "netstat -I ".$system_ifaces[0]." -b | tail -n1 | awk '{ print $7\" \"$10 }'";
+			$res = shell_exec($comm);
+			$R2 = explode(" ", $res)[0];
+			$T2 = explode(" ", $res)[1];
+
+			if ($R1 != '' && $R1 != 'Ibytes') {
+				$bites_in = number_format((intval($R2 - $R1)/1024/1024) * 8, 2, ',', '');
+				$biyes_out = number_format((intval($T2 - $T1)/1024/1024) * 8, 2, ',', '');
+			}
+			else {
+				$bites_in = -1;
+				$biyes_out = -1;
+			}
 		}
 
 		// Return //
