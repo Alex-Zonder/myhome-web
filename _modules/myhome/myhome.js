@@ -63,7 +63,7 @@ var Init_Myhome = function () {
 	});
 
 	GreateGroups();
-	setTimeout("ViewGroup(myhome_setts['main']['first_group'])", 1);
+	setTimeout("moved_myhome.Change_Div(myhome_setts['main']['first_group'])", 1);
 	body_footer_opened = myhome_setts['main']['view_console'] || false;
 
 	EnableMyhomeWait();
