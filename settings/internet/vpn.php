@@ -19,6 +19,26 @@ function GetPppSettings () {
 }
 //								P O S T								//
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+	# Загрузка файла #
+	if ($_FILES) {
+		// var_dump($_FILES);
+		// // $file_manager->LoadFile('file', '/tmp/client.conf');
+		// move_uploaded_file($_FILES['file']['tmp_name'], '/tmp/client.conf');
+		// echo '<hr>' . file_get_contents('/tmp/client.conf');
+
+		$dir = '/etc/openvpn/';
+		if (is_dir($dir)) {
+			move_uploaded_file($_FILES['file']['tmp_name'], '/tmp/client.conf');
+			exec("sudo mv /tmp/client.conf {$dir}client/client.conf");
+			exec('sudo systemctl enable openvpn-client@client');
+			exec('sudo systemctl start openvpn-client@client');
+			echo 'Ok';
+		} else {
+			echo 'Error: No dir ' . $dir;
+		}
+		exit;
+	}
+
 	$post_action=$_POST['action'];
 	$post_data=$_POST['data'];
 
@@ -155,6 +175,25 @@ echo '</script>';
 </div>
 
 <div class="info_block">
+	<div class="info_block_name">Протокол OpenVPN</div>
+	<center>
+		<form method="post" enctype="multipart/form-data">
+			<div>
+				<?php echo exec('ifconfig | grep tun') != ''
+					? '<font color="#00e600"><b>Соединение установлено</b></font>'
+					: '<font color="red"><b>Соединение отсутствует</b></font>';
+				?>
+			</div>
+			<hr>
+			<div>
+				<input type="file" id="file" name="file" multiple style="display: none;" onchange="onFileChange(this.files)">
+				<button type="button" class="btn btn-success" onclick="document.getElementById('file').click()">Загрузить файл (.ovpn)</button>
+			</div>
+		</form>
+	</center>
+</div>
+
+<div class="info_block">
 	<div class="info_block_name">Совет</div>
 	<center>
 		Если Вы испытываете трудности с соединением с сервером или при
@@ -205,5 +244,37 @@ function SaveSettings () {
 		var data = {'name':ppp_name.value,'pass':ppp_pass.value,'server':ppp_server.value,'mtu':ppp_mtu.value};
 		SendPost('save_ppp',ToJson(data));
 	}
+}
+</script>
+
+
+<script>
+// Загрузка файла
+function onFileChange(e) {// alert('aaa' + e[0].name); console.log(e);
+	var files = e;
+
+	if (!files.length)
+		return;
+
+	sendFile(files[0]);
+}
+function sendFile(file) {// alert('bbb');
+	var data = new FormData();
+	data.append('file', file);
+	// data.append('phoneId', this.phone.id);
+	fetch('', {
+		method: 'POST',
+		body: data
+	})
+	.then(response => response.text())
+	.then(text => {
+		// if (text.match('^ok')) {
+		// 	// let imageName = text.split('ok:')[1];
+		// 	// this.phone.image = imageName;
+		// }
+		// else {
+			alert(text);
+		// }
+	});
 }
 </script>
